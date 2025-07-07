@@ -16,10 +16,13 @@ app.use(
 app.use(express.json());
 
 // Connect MongoDB
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error(err));
+mongoose.connect(process.env.MONGO_URI);
+mongoose.connection.on("connected", () => {
+  console.log("✅ MongoDB connected successfully");
+});
+mongoose.connection.on("error", (err) => {
+  console.error("❌ MongoDB connection error:", err);
+});
 
 // Configure Cloudinary
 cloudinary.config({

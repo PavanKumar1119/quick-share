@@ -14,7 +14,7 @@ function App() {
   const [timerId, setTimerId] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const BACKEND_URL = "http://localhost:5000";
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);

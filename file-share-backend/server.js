@@ -6,7 +6,14 @@ const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 
 const app = express();
-app.use(cors());
+const cors = require("cors");
+
+app.use(
+  cors({
+    origin: ["https://quick-share-ui.vercel.app", "http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Connect MongoDB

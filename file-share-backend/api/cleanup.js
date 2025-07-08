@@ -1,12 +1,12 @@
 // /api/cleanup.js
+import { v2 as cloudinary } from "cloudinary";
 import mongoose from "mongoose";
-import cloudinary from "cloudinary";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 // Cloudinary config
-cloudinary.v2.config({
+cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
@@ -36,6 +36,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
+  if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   try {
     if (mongoose.connection.readyState === 0) {
       await mongoose.connect(process.env.MONGO_URI);
@@ -48,7 +52,7 @@ export default async function handler(req, res) {
     for (const t of expiredTransfers) {
       const publicId = extractPublicId(t.fileUrl);
       try {
-        await cloudinary.v2.uploader.destroy(publicId, {
+        await cloudinary.uploader.destroy(publicId, {
           resource_type: t.resourceType || "raw",
         });
       } catch (err) {

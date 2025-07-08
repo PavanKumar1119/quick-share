@@ -1,10 +1,18 @@
-// vercel cron: "0 * * * *"
+// /api/cleanup.js
+import mongoose from "mongoose";
+import cloudinary from "cloudinary";
+import dotenv from "dotenv";
 
-const mongoose = require("mongoose");
-const cloudinary = require("cloudinary").v2;
+dotenv.config();
 
-require("dotenv").config();
+// Cloudinary config
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
+// Mongoose schema
 const transferSchema = new mongoose.Schema({
   code: String,
   secretWord: String,
@@ -16,16 +24,22 @@ const transferSchema = new mongoose.Schema({
 const Transfer =
   mongoose.models.Transfer || mongoose.model("Transfer", transferSchema);
 
-// Helper function
+// Helper to extract public ID
 function extractPublicId(url) {
   const parts = url.split("/");
   const fileName = parts[parts.length - 1];
   return fileName.split(".")[0];
 }
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method Not Allowed" });
+  }
+
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(process.env.MONGO_URI);
+    }
 
     const expiredTransfers = await Transfer.find({
       expiresAt: { $lt: new Date() },
@@ -34,7 +48,7 @@ module.exports = async (req, res) => {
     for (const t of expiredTransfers) {
       const publicId = extractPublicId(t.fileUrl);
       try {
-        await cloudinary.uploader.destroy(publicId, {
+        await cloudinary.v2.uploader.destroy(publicId, {
           resource_type: t.resourceType || "raw",
         });
       } catch (err) {
@@ -46,9 +60,12 @@ module.exports = async (req, res) => {
       expiresAt: { $lt: new Date() },
     });
 
-    return res.json({ message: "Expired transfers cleaned up." });
+    return res.status(200).json({
+      message: "Expired transfers cleaned up.",
+      cleaned: expiredTransfers.length,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Cleanup failed." });
   }
-};
+}

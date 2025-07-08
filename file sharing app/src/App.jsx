@@ -293,7 +293,7 @@ function App() {
         {mode === "send" && showResult && (
           <div className="text-center space-y-6">
             <h2 className="text-2xl font-bold text-[#111827]">
-              ✅ Share This Info
+              Share This Info
             </h2>
             <div className="flex justify-center gap-4">
               <div className="bg-[#E5E7EB] rounded-lg p-4 min-w-[140px]">

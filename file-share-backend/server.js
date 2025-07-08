@@ -9,7 +9,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["https://quick-share-ui.vercel.app", "http://localhost:5173"],
+    origin: ["https://quickshare-ui.vercel.app", "http://localhost:5173"],
     credentials: true,
   })
 );
